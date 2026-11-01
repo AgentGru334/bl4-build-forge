@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0710">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Build Forge">
+  <title>BL4 Build Forge</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0710; --panel: #140d1d; --field: #1b1227; --field-hi: #241834;
+      --border: #35224d; --accent: #b26bff; --accent-hi: #c98cff; --accent-lo: #5b2d8f;
+      --magenta: #e05cff; --text: #ece3ff; --muted: #b7a9ce; --faint: #9989b2;
+      --ok: #8ef0c4; --warn: #ffc06b; --select: #4a2577; --on-accent: #12091c;
+      --nav: 4.6rem; --dock: 0px; --safe-top: env(safe-area-inset-top); --safe-bot: env(safe-area-inset-bottom);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font: 16px/1.45 "Segoe UI", system-ui, sans-serif;
+      padding-top: calc(4.6rem + var(--safe-top));
+      padding-bottom: calc(var(--nav) + var(--dock) + var(--safe-bot));
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button, a, input, select, textarea { outline-offset: 3px; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .45; cursor: default; }
+    header {
+      position: fixed; inset: 0 0 auto 0; z-index: 20;
+      display: flex; align-items: center; gap: 12px;
+      padding: calc(8px + var(--safe-top)) 14px 8px;
+      background: var(--panel); border-bottom: 2px solid transparent;
+      border-image: linear-gradient(90deg, var(--accent-lo), var(--magenta)) 1;
+      min-height: calc(4.6rem + var(--safe-top));
+    }
+    .crest { width: 36px; height: 48px; flex: 0 0 auto; }
+    .titles { min-width: 0; flex: 1; }
+    h1 { margin: 0; font: 700 1.15rem/1.15 Georgia, "Times New Roman", serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub, .file { margin: 2px 0 0; color: var(--muted); font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file { color: var(--faint); }
+    .theme { display: grid; justify-items: end; gap: 2px; }
+    .theme label { color: var(--muted); font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; }
+    select, input[type="text"], input[type="url"], textarea {
+      width: 100%; background: var(--field); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+      font-size: 16px;
+    }
+    select { width: auto; min-width: 9.5rem; padding: 8px 10px; background: var(--field); }
+    textarea { min-height: 9rem; resize: vertical; }
+    textarea.short { min-height: 5.5rem; }
+    textarea.code {
+      min-height: 4.2rem; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace;
+      font-size: 13px; word-break: break-all; color: var(--ok);
+    }
+    main { padding: 12px 14px 8px; max-width: 760px; margin: 0 auto; }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 14px; margin: 0 0 12px;
+    }
+    .step { color: var(--accent-hi); font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+    h2 { margin: 2px 0 6px; font-size: 1.05rem; }
+    .hint { margin: 0 0 12px; color: var(--muted); font-size: .88rem; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row > input, .row > select { flex: 1; }
+    .wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    button, .button {
+      min-height: 44px; padding: 10px 14px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--field); color: var(--text);
+    }
+    button.accent { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 700; }
+    button.ghost { background: transparent; border-color: transparent; color: var(--muted); min-height: 40px; }
+    button.block { width: 100%; }
+    button.on { color: var(--accent-hi); border-color: var(--border); background: var(--field); }
+    .check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+    .check input { width: 22px; height: 22px; accent-color: var(--accent); }
+    #status {
+      margin: 0 auto; max-width: 760px; padding: 8px 16px 0; color: var(--muted); font-size: .82rem;
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; color: var(--muted); font-size: .78rem; margin: 0 0 8px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .item {
+      background: var(--field); border: 1px solid var(--border); border-radius: 14px;
+      padding: 10px 12px; margin: 0 0 10px;
+    }
+    .item.picked { border-color: var(--accent); background: var(--select); }
+    .item .top { display: flex; gap: 8px; align-items: flex-start; }
+    .item .q { color: var(--muted); font-size: .78rem; margin: 0; flex: 1; }
+    .item input[type="checkbox"] { width: 22px; height: 22px; margin-top: 0; accent-color: var(--accent); flex: 0 0 auto; }
+    #manual-result { white-space: pre-wrap; }
+    .item .type { font-size: .78rem; color: var(--muted); margin: 6px 0; }
+    .item.miss { color: var(--faint); }
+    .item.miss textarea.code { color: var(--faint); }
+    .item.part textarea.code { color: var(--muted); }
+    .item.alt .q { color: var(--warn); }
+    .note { margin: 6px 0 0; color: var(--muted); font-size: .8rem; }
+    .empty { color: var(--faint); text-align: center; padding: 28px 8px; }
+    #detail { color: var(--muted); font-size: .82rem; min-height: 1.2em; margin: 8px 0; }
+    pre.report, textarea.preview {
+      white-space: pre-wrap; word-break: break-word; background: var(--field);
+      border-radius: 12px; padding: 12px; margin: 8px 0 0; max-height: 16rem; overflow: auto;
+      font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-size: 12px;
+    }
+    .help button.section { width: 100%; text-align: left; margin: 0 0 8px; }
+    .help .body { white-space: pre-wrap; color: var(--text); background: var(--field); border-radius: 12px; padding: 12px; margin: -4px 0 12px; }
+    a { color: var(--accent-hi); }
+    nav {
+      position: fixed; inset: auto 0 0 0; z-index: 30;
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+      padding: 6px 8px calc(6px + var(--safe-bot));
+      background: var(--panel); border-top: 1px solid var(--border);
+    }
+    nav button { min-height: 48px; padding: 6px 2px; font-size: .68rem; line-height: 1.15; }
+    #save-links { width: 100%; margin-top: 8px; }
+    nav button[aria-current="page"] { color: var(--accent-hi); border-color: var(--border); background: var(--field); }
+    .dock {
+      position: fixed; left: 0; right: 0; z-index: 25;
+      bottom: calc(var(--nav) + var(--safe-bot));
+      display: flex; gap: 8px; padding: 8px 10px;
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+    .dock[hidden] { display: none; }
+    .dock button { flex: 1; padding: 10px 6px; }
+    #modal[hidden] { display: none; }
+    #modal {
+      position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55);
+      display: flex; align-items: flex-end; justify-content: center; padding: 12px;
+    }
+    .sheet {
+      width: min(560px, 100%); max-height: min(80dvh, 640px); overflow: auto;
+      background: var(--panel); color: var(--text); border: 1px solid var(--border);
+      border-radius: 18px 18px 12px 12px; padding: 16px 16px calc(16px + var(--safe-bot));
+    }
+    .sheet h2 { margin-top: 0; }
+    .sheet p { white-space: pre-wrap; color: var(--text); }
+    .sheet .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .sheet .actions button { flex: 1; }
+    .builds { display: grid; gap: 8px; margin: 8px 0; }
+    .builds button { text-align: left; }
+    #boot {
+      position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+      background: var(--bg); color: var(--muted); padding: 24px; text-align: center;
+    }
+    #boot[hidden] { display: none; }
+    @media (min-width: 800px) {
+      #modal { align-items: center; }
+      .sheet { border-radius: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <svg class="crest" viewBox="0 0 64 96" aria-hidden="true">
+      <g fill="none" stroke="var(--accent-hi)" stroke-width="6" stroke-linecap="round">
+        <path d="M32 8v80M14 36h36M22 20h20"/>
+      </g>
+      <path fill="var(--magenta)" d="M32 30l6 6-6 6-6-6z"/>
+    </svg>
+    <div class="titles">
+      <h1>BL4 Build Forge</h1>
+      <p class="sub">Azalea Asvail's Modding World · build pages → item codes</p>
+      <p class="file" id="file-name">Unsaved build</p>
+    </div>
+    <div class="theme">
+      <label for="theme">Theme</label>
+      <select id="theme" aria-label="Theme"></select>
+    </div>
+  </header>
+  <p id="status" role="status">Loading the item catalog…</p>
+  <main>
+    <section id="view-build">
+      <article class="card">
+        <div class="step">01</div>
+        <h2>Import a build</h2>
+        <p class="hint">On your phone, open the build page, select all, and copy. Then paste it here. To type in codes yourself, use Manual.</p>
+        <div class="row">
+          <input id="url" type="url" inputmode="url" placeholder="Build page link" autocomplete="off">
+          <button id="import" class="accent" type="button">Import</button>
+        </div>
+        <div class="wrap">
+          <button id="open-page" class="ghost" type="button">Open page</button>
+          <button id="paste" type="button">Paste page text</button>
+          <button id="load-page" type="button">Load saved page</button>
+        </div>
+        <input id="page-file" type="file" hidden accept=".html,.htm,.mhtml,.mht,.txt,.json,text/html,text/plain,application/json">
+      </article>
+      <article class="card">
+        <div class="step">02</div>
+        <h2>Page text</h2>
+        <p class="hint">Paste or edit the copied page, then resolve. Resolving replaces the current item rows.</p>
+        <textarea id="page" placeholder="Paste the build page here"></textarea>
+        <div class="wrap">
+          <button id="resolve" class="accent block" type="button">Resolve item codes</button>
+        </div>
+      </article>
+      <div class="wrap">
+        <button id="save-build" type="button">Save build</button>
+        <button id="save-as" type="button">Save a copy</button>
+        <button id="open-build" type="button">Open build</button>
+        <button id="download-build" type="button">Download build file</button>
+      </div>
+    </section>
+    <section id="view-manual" hidden>
+      <article class="card">
+        <div class="step">MANUAL</div>
+        <h2>Manual build</h2>
+        <p class="hint">Save a build from codes you already have. Add the guide link, a description, and notes, then paste or upload the item codes.</p>
+        <label class="hint" for="build-name">Build name</label>
+        <input id="build-name" type="text" maxlength="80" placeholder="Amon splash" autocomplete="off">
+        <label class="hint" for="manual-url">Build URL</label>
+        <input id="manual-url" type="url" inputmode="url" placeholder="https://example.com/your-build" autocomplete="off">
+        <label class="hint" for="description">Description</label>
+        <textarea id="description" class="short" placeholder="What this build is for"></textarea>
+        <label class="hint" for="notes">Notes</label>
+        <textarea id="notes" class="short" placeholder="Parts to watch, where the codes came from, anything you want to remember"></textarea>
+      </article>
+      <article class="card">
+        <h2>Bulk codes</h2>
+        <p class="hint">One complete @U code per line. Partial part tokens are rejected.</p>
+        <textarea id="manual-codes" class="code" placeholder="@U..."></textarea>
+        <label class="check"><input id="manual-replace" type="checkbox"> Replace current codes</label>
+        <div class="wrap">
+          <button id="add-codes" class="accent" type="button">Add codes</button>
+          <button id="upload-codes" type="button">Upload code list</button>
+        </div>
+        <p class="hint" id="manual-result"></p>
+        <input id="manual-file" type="file" hidden accept=".txt,text/plain">
+        <div class="wrap">
+          <button id="manual-save" class="accent" type="button">Save build</button>
+          <button id="manual-save-as" type="button">Save a copy</button>
+          <button id="manual-open" type="button">Open build</button>
+        </div>
+      </article>
+    </section>
+    <section id="view-codes" hidden>
+      <article class="card">
+        <div class="step">03</div>
+        <h2>Item codes</h2>
+        <p class="hint">Tap a name or code to edit it. Copy all sends complete item codes only, one per line.</p>
+        <label class="check"><input id="items-only" type="checkbox" checked> Items only</label>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--ok)"></i>full code, ready to paste</span>
+          <span><i class="dot" style="background:var(--warn)"></i>several items share this name</span>
+          <span><i class="dot" style="background:var(--faint)"></i>not found</span>
+        </div>
+        <div class="wrap" id="sorts">
+          <button type="button" data-sort="query">Page</button>
+          <button type="button" data-sort="label">Item</button>
+          <button type="button" data-sort="type">Type</button>
+          <button type="button" data-sort="code">Code</button>
+        </div>
+        <p id="detail"></p>
+        <div id="code-list"></div>
+      </article>
+    </section>
+    <section id="view-save" hidden>
+      <article class="card">
+        <div class="step">01</div>
+        <h2>Load a save</h2>
+        <p class="hint">Only needed to put items into a save. The codes work without this.</p>
+        <label class="hint" for="save-url">Public creator save URL</label>
+        <div class="row">
+          <input id="save-url" type="url" inputmode="url" placeholder="https://" autocomplete="off">
+          <button id="download-save" type="button">Download</button>
+        </div>
+        <select id="save-links" hidden></select>
+        <div class="wrap">
+          <button id="load-save" type="button">Load .sav / YAML</button>
+          <button id="load-linked" type="button">Load linked creator save</button>
+          <button id="yaml-btn" type="button">YAML to TXT</button>
+        </div>
+        <input id="save-file" type="file" hidden accept=".sav,.yaml,.yml,.txt,.zip,application/octet-stream,text/yaml,text/plain">
+      </article>
+      <article class="card" id="yaml-box" hidden>
+        <h2>YAML to TXT</h2>
+        <p class="hint">Decrypted character YAML only. Bank items are left out, and the original file is not changed.</p>
+        <div class="wrap">
+          <button id="yaml-open" type="button">Open YAML</button>
+          <label class="check"><input id="yaml-eq" type="checkbox" checked> Equipped</label>
+          <label class="check"><input id="yaml-bp" type="checkbox" checked> Backpack</label>
+          <label class="check"><input id="yaml-uniq" type="checkbox" checked> Remove duplicates</label>
+        </div>
+        <textarea id="yaml-preview" class="preview" readonly placeholder="Open or drop a character YAML file."></textarea>
+        <div class="wrap">
+          <button id="yaml-copy" type="button" disabled>Copy codes</button>
+          <button id="yaml-save" type="button" disabled>Save TXT</button>
+        </div>
+        <p class="hint" id="yaml-count">Open or drop a character YAML file.</p>
+        <input id="yaml-file" type="file" hidden accept=".yaml,.yml,.txt,text/yaml,text/plain">
+      </article>
+      <article class="card">
+        <div class="step">02</div>
+        <h2>Account IDs</h2>
+        <label class="hint" for="creator-id">Creator's SteamID64</label>
+        <input id="creator-id" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="only for an encrypted .sav from the build's creator">
+        <label class="hint" for="your-id">Your SteamID64</label>
+        <input id="your-id" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="to open or export your own .sav">
+        <p class="hint">Leave your ID blank to export a .yaml instead of a .sav.</p>
+      </article>
+      <article class="card">
+        <div class="step">03</div>
+        <h2>Prepare and export</h2>
+        <label class="check"><input id="fix-char" type="checkbox" checked> Set character level to the build level</label>
+        <label class="check"><input id="fix-items" type="checkbox"> Scale gear in the save to the build level</label>
+        <label class="check"><input id="add-items" type="checkbox" checked> Add the build's item codes to the backpack</label>
+        <div class="wrap">
+          <button id="prepare" class="accent" type="button">Audit and prepare</button>
+          <button id="export" type="button">Export file</button>
+        </div>
+        <pre class="report" id="report">Save audit and preparation details show here.</pre>
+      </article>
+    </section>
+    <section id="view-help" class="help" hidden></section>
+  </main>
+  <div class="dock" id="dock" hidden>
+    <button id="copy-one" type="button">Copy</button>
+    <button id="copy-all" class="accent" type="button">Copy all</button>
+    <button id="save-txt" type="button">Save TXT</button>
+  </div>
+  <nav>
+    <button type="button" data-view="build" aria-current="page">Build</button>
+    <button type="button" data-view="manual">Manual</button>
+    <button type="button" data-view="codes">Codes</button>
+    <button type="button" data-view="save">Save</button>
+    <button type="button" data-view="help">Help</button>
+  </nav>
+  <div id="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title"></h2>
+      <p id="modal-body"></p>
+      <div id="modal-extra"></div>
+      <textarea id="modal-input" hidden readonly></textarea>
+      <div class="actions" id="modal-actions"></div>
+    </div>
+  </div>
+  <div id="boot">Loading the item catalog…</div>
+  <script src="bf-data.js"></script>
+  <script src="forge-core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
